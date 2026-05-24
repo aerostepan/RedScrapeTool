@@ -1,0 +1,50 @@
+topic: "AI video editing tools"
+subreddits:
+  - VideoEditing
+  - NewTubers
+  - ContentCreators
+  - Entrepreneur
+limit_per_query: 50
+days_back: 90
+output_path: "data/exports/reddit_market_research.xlsx"
+
+search_phrases:
+  - "I wish"
+  - "why doesn't"
+  - "why cant"
+  - "why can't"
+  - "alternative to"
+  - "any tool for"
+  - "is there a tool"
+  - "looking for a tool"
+  - "missing feature"
+  - "too expensive"
+  - "hate using"
+  - "annoying"
+  - "manual"
+  - "takes too long"
+  - "doesn't integrate"
+  - "no integration"
+  - "workaround"
+  - "feature request"
+  - "need software for"
+  - "how do you manage"
+
+reddit:
+  user_agent: "market-research-tool/0.1 by local-user"
+  use_rss: true
+  use_oauth_fallback: true
+  use_public_pages: true
+  use_selenium_fallback: false
+  use_cdp_fallback: false
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+
+ai:
+  provider: "openai"
+  model: "gpt-4.1-mini"
+  temperature: 0
+  max_items_per_batch: 10

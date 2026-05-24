@@ -1,0 +1,14 @@
+feedparser
+curl_cffi
+beautifulsoup4
+lxml
+seleniumbase
+pandas
+openpyxl
+redis
+pyyaml
+python-dotenv
+rapidfuzz
+pydantic
+openai
+
