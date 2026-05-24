@@ -36,7 +36,9 @@ class DedupeStore:
             keys.append(f"id:{item_id}")
 
         url = canonical_url(str(item.get("url") or ""))
-        if url:
+        # Visible comments may only expose their parent post URL; their stable
+        # ID and text hash distinguish them without collapsing the thread.
+        if url and item.get("item_type") != "comment":
             keys.append(f"url:{url}")
 
         normalized_blob = normalize_blob(
@@ -100,4 +102,3 @@ def normalize_blob(value: str) -> str:
 
 def hash_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8", errors="ignore")).hexdigest()[:24]
-

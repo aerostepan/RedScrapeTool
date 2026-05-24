@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+secrets/
 __pycache__/
 *.pyc
 .DS_Store
@@ -10,3 +11,5 @@ logs/*.log
 data/raw/*.jsonl
 data/processed/*.jsonl
 data/processed/dedupe_seen.json
+data/processed/dedupe_import_*.json
+data/published/

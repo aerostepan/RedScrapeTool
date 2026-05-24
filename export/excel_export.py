@@ -98,6 +98,26 @@ OPPORTUNITY_HEADERS = [
     "Representative Evidence URLs",
 ]
 
+OVERVIEW_HEADERS = [
+    "Field",
+    "Value",
+]
+
+CONCEPT_HEADERS = [
+    "Concept Type",
+    "Product Name",
+    "Target User",
+    "Pitch",
+    "Problem / Evidence Basis",
+    "Proposed Solution",
+    "MVP Features",
+    "Differentiators",
+    "Revenue Hypothesis",
+    "Why Users Might Pay",
+    "Risks And Unknowns",
+    "Validation Experiments",
+]
+
 
 def export_market_research_workbook(
     output_path: str | Path,
@@ -107,6 +127,7 @@ def export_market_research_workbook(
     desired_features: list[dict[str, Any]],
     competitor_weaknesses: list[dict[str, Any]],
     top_opportunities: list[dict[str, Any]],
+    product_synthesis: dict[str, Any] | None = None,
 ) -> Path:
     """Create the multi-sheet Excel workbook."""
 
@@ -124,33 +145,48 @@ def export_market_research_workbook(
     default_sheet = workbook.active
     workbook.remove(default_sheet)
 
-    sheets = {
-        "Raw Reddit Data": build_raw_rows(raw_items),
-        "Filtered Signals": build_filtered_rows(processed_items),
-        "Pain Point Clusters": build_cluster_rows(clusters),
-        "Desired Features": build_feature_rows(desired_features),
-        "Competitor Weaknesses": build_competitor_rows(competitor_weaknesses),
-        "Top Opportunities": build_opportunity_rows(top_opportunities),
-    }
-
-    header_map = {
-        "Raw Reddit Data": RAW_HEADERS,
-        "Filtered Signals": FILTERED_HEADERS,
-        "Pain Point Clusters": CLUSTER_HEADERS,
-        "Desired Features": FEATURE_HEADERS,
-        "Competitor Weaknesses": COMPETITOR_HEADERS,
-        "Top Opportunities": OPPORTUNITY_HEADERS,
-    }
-
-    for sheet_name, rows in sheets.items():
+    tables = build_market_research_tables(
+        raw_items=raw_items,
+        processed_items=processed_items,
+        clusters=clusters,
+        desired_features=desired_features,
+        competitor_weaknesses=competitor_weaknesses,
+        top_opportunities=top_opportunities,
+        product_synthesis=product_synthesis,
+    )
+    for sheet_name, rows in tables.items():
         worksheet = workbook.create_sheet(sheet_name)
-        worksheet.append(header_map[sheet_name])
         for row in rows:
             worksheet.append(row)
         style_worksheet(worksheet, get_column_letter, Font, PatternFill, Alignment)
 
     workbook.save(output)
     return output
+
+
+def build_market_research_tables(
+    raw_items: list[dict[str, Any]],
+    processed_items: list[dict[str, Any]],
+    clusters: list[dict[str, Any]],
+    desired_features: list[dict[str, Any]],
+    competitor_weaknesses: list[dict[str, Any]],
+    top_opportunities: list[dict[str, Any]],
+    product_synthesis: dict[str, Any] | None = None,
+) -> dict[str, list[list[Any]]]:
+    """Build the report tables shared by local Excel and Google Sheets exports."""
+
+    tables = {
+        "Raw Reddit Data": [RAW_HEADERS, *build_raw_rows(raw_items)],
+        "Filtered Signals": [FILTERED_HEADERS, *build_filtered_rows(processed_items)],
+        "Pain Point Clusters": [CLUSTER_HEADERS, *build_cluster_rows(clusters)],
+        "Desired Features": [FEATURE_HEADERS, *build_feature_rows(desired_features)],
+        "Competitor Weaknesses": [COMPETITOR_HEADERS, *build_competitor_rows(competitor_weaknesses)],
+        "Top Opportunities": [OPPORTUNITY_HEADERS, *build_opportunity_rows(top_opportunities)],
+    }
+    if product_synthesis is not None:
+        tables["Product Overview"] = [OVERVIEW_HEADERS, *build_overview_rows(product_synthesis)]
+        tables["Product Concepts"] = [CONCEPT_HEADERS, *build_concept_rows(product_synthesis)]
+    return tables
 
 
 def build_raw_rows(raw_items: list[dict[str, Any]]) -> list[list[Any]]:
@@ -282,6 +318,47 @@ def build_opportunity_rows(opportunities: list[dict[str, Any]]) -> list[list[Any
     return rows
 
 
+def build_overview_rows(synthesis: dict[str, Any]) -> list[list[Any]]:
+    recommended = synthesis.get("recommended_concept") or {}
+    return [
+        ["Research Summary", synthesis.get("research_summary")],
+        ["Market Signal Strength", synthesis.get("market_signal_strength")],
+        ["Primary User Segment", synthesis.get("primary_user_segment")],
+        ["Recommended Product", recommended.get("product_name")],
+        ["Recommended Pitch", recommended.get("one_line_pitch")],
+        ["Proposed Solution", recommended.get("solution_overview")],
+        ["Evidence Notes", join_cell(synthesis.get("evidence_notes"))],
+        ["Unresolved Questions", join_cell(synthesis.get("unresolved_questions"))],
+        ["Questions For NotebookLM", join_cell(synthesis.get("notebooklm_questions"))],
+    ]
+
+
+def build_concept_rows(synthesis: dict[str, Any]) -> list[list[Any]]:
+    recommended = synthesis.get("recommended_concept") or {}
+    rows = [build_concept_row("Recommended hypothesis", recommended)]
+    for concept in synthesis.get("alternative_concepts") or []:
+        rows.append(build_concept_row("Alternative hypothesis", concept))
+    return rows
+
+
+def build_concept_row(concept_type: str, concept: dict[str, Any]) -> list[Any]:
+    problem = concept.get("problem_to_solve") or concept.get("evidence_basis")
+    return [
+        concept_type,
+        concept.get("product_name"),
+        concept.get("target_user"),
+        concept.get("one_line_pitch"),
+        problem,
+        concept.get("solution_overview"),
+        join_cell(concept.get("mvp_features")),
+        join_cell(concept.get("differentiators")),
+        concept.get("revenue_hypothesis"),
+        join_cell(concept.get("why_users_might_pay")),
+        join_cell(concept.get("risks_and_unknowns")),
+        join_cell(concept.get("validation_experiments")),
+    ]
+
+
 def join_cell(value: Any) -> str:
     if value is None:
         return ""
@@ -317,7 +394,22 @@ def style_worksheet(worksheet: Any, get_column_letter: Any, Font: Any, PatternFi
             value = str(cell.value or "")
             longest_line = max(value.split("\n"), key=len, default="")
             max_length = max(max_length, len(longest_line))
-        if header in {"Text", "Summary", "Possible Startup Idea", "Representative Quotes"}:
+        if header in {
+            "Text",
+            "Summary",
+            "Possible Startup Idea",
+            "Representative Quotes",
+            "Value",
+            "Pitch",
+            "Problem / Evidence Basis",
+            "Proposed Solution",
+            "MVP Features",
+            "Differentiators",
+            "Revenue Hypothesis",
+            "Why Users Might Pay",
+            "Risks And Unknowns",
+            "Validation Experiments",
+        }:
             width = min(max(max_length + 2, 24), 70)
         elif "URL" in header:
             width = min(max(max_length + 2, 24), 60)
@@ -326,4 +418,3 @@ def style_worksheet(worksheet: Any, get_column_letter: Any, Font: Any, PatternFi
         worksheet.column_dimensions[column_letter].width = width
 
     worksheet.row_dimensions[1].height = 24
-

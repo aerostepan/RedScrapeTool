@@ -7,6 +7,7 @@ subreddits:
 limit_per_query: 50
 days_back: 90
 output_path: "data/exports/reddit_market_research.xlsx"
+fetch_mode: "auto"
 
 search_phrases:
   - "I wish"
@@ -38,6 +39,18 @@ reddit:
   use_selenium_fallback: false
   use_cdp_fallback: false
 
+browser_fallback:
+  enabled: false
+  headless: false
+  timeout: 30
+  min_delay_seconds: 10
+  max_delay_seconds: 20
+  scrolls_per_search: 2
+  open_post_pages: true
+  max_comments_per_post: 2
+  max_queries_per_subreddit: 12
+  sample_all_subreddits_first: true
+
 redis:
   host: "localhost"
   port: 6379
@@ -48,3 +61,21 @@ ai:
   model: "gpt-4.1-mini"
   temperature: 0
   max_items_per_batch: 10
+
+notebooklm:
+  enabled: true
+
+local_exports:
+  excel: true
+  notebooklm_markdown: true
+
+google_workspace:
+  enabled: false
+  reuse_notebook_source_doc: true
+  share_with_link: false
+  state_path: "data/published/google_resources.json"
+  spreadsheet_title: "{topic} Product Discovery - {date}"
+  notebook_source_title: "{topic} NotebookLM Source"
+
+telegram:
+  enabled: false

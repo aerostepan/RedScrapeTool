@@ -24,6 +24,18 @@ POSITIVE_KEYWORDS = [
     "need a tool",
     "looking for",
     "recommend",
+    "quote",
+    "estimate",
+    "rebate",
+    "permit",
+    "tax credit",
+    "paperwork",
+    "cost",
+    "overcharg",
+    "installer",
+    "electrician",
+    "panel upgrade",
+    "warranty",
 ]
 
 NEGATIVE_KEYWORDS = [
@@ -74,4 +86,3 @@ def rule_based_relevance(text: str, title: str = "") -> FilterResult:
         positive_hits=positive_hits,
         negative_hits=negative_hits,
     )
-
